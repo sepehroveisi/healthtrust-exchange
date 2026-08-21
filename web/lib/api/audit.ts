@@ -1,0 +1,1 @@
+import{api}from"./client";export type AuditEvent={transaction:{ID:string;Type:string;ActorID:string;OrganizationID:string;ResourceID:string;PayloadHash:number[];Timestamp:string};blockHeight:number;blockHash:number[]};export const auditApi={list:()=>api<AuditEvent[]>("a","/audit")};

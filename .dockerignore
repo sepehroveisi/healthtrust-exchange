@@ -1,0 +1,15 @@
+.git
+.env
+.DS_Store
+coverage.out
+*.test
+web/node_modules
+web/.next
+web/dist
+web/.vinext
+web/.wrangler
+web/test-results
+web/playwright-report
+web/coverage
+web/*.tsbuildinfo
+artifacts

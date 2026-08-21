@@ -1,0 +1,2 @@
+.doctor-primary-actions{grid-column:2;grid-row:2/6;align-self:center;display:flex;gap:8px}
+@media(max-width:700px){.doctor-primary-actions{grid-column:1;grid-row:auto;margin-top:8px;flex-wrap:wrap}.doctor-primary-actions .button{flex:1}}

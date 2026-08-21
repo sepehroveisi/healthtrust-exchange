@@ -1,0 +1,1 @@
+import{api}from"./client";export type PendingOperation={Operation:string;ObjectID:string;Status:string};export const operationsApi={list:()=>api<PendingOperation[]>("a","/operations/pending"),reconcile:()=>api<{reconciled:number}>("a","/operations/reconcile",{method:"POST"})};

@@ -1,0 +1,1 @@
+import{api}from"./client";export type JourneyStep={Name:string;Status:string;OccurredAt?:string};export type PatientJourney={PatientID:string;CurrentStage:string;Steps:JourneyStep[]};export const journeyApi={get:(patientId:string)=>api<PatientJourney>("b",`/patients/${encodeURIComponent(patientId)}/journey`)};

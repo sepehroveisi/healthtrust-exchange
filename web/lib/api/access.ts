@@ -1,0 +1,5 @@
+import{api}from"./client";
+export type AccessRequest={ID:string;ReferralID:string;PatientID:string;NetworkPatientID?:string;RecordID:string;DiscoveryScopeID?:string;RequesterActorID:string;RequesterOrganizationID:string;SourceOrganizationID?:string;Purpose?:string;Status:string;CreatedAt:string;UpdatedAt:string};
+export type RecordDiscovery={Hospital:string;OrganizationID:string;RecordsAvailable:boolean;RecordCount:number;Scopes:{ID:string;Label:string}[]};
+type Outgoing={Request:AccessRequest};
+export const accessApi={list:(networkPatientId:string)=>api<AccessRequest[]>("a",`/access-requests?networkPatientId=${encodeURIComponent(networkPatientId)}`),outgoing:async(patientId="")=>(await api<Outgoing[]>("b",`/outgoing-access-requests?patientId=${encodeURIComponent(patientId)}`)).map(v=>v.Request),discover:(patientId:string)=>api<RecordDiscovery>("b",`/external-records/discover?patientId=${encodeURIComponent(patientId)}&sourceOrganizationId=hospital-a`),request:(v:AccessRequest)=>api<{forwarded:boolean}>("b","/outgoing-access-requests",{method:"POST",body:JSON.stringify(v)})};

@@ -1,0 +1,1 @@
+import{api}from"./client";export type ChainSummary={height:number;latestHash:number[]};export const systemApi={chain:(h:"a"|"b")=>api<ChainSummary>(h,"/chain"),both:()=>Promise.all([api<ChainSummary>("a","/chain"),api<ChainSummary>("b","/chain")])};

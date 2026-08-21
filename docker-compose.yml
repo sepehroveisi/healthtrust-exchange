@@ -1,0 +1,71 @@
+services:
+  postgres-a:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: healthtrust
+      POSTGRES_PASSWORD: healthtrust
+      POSTGRES_DB: healthtrust_a
+    volumes:
+      - postgres-a-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U healthtrust -d healthtrust_a"]
+      interval: 2s
+      timeout: 2s
+      retries: 20
+
+  postgres-b:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: healthtrust
+      POSTGRES_PASSWORD: healthtrust
+      POSTGRES_DB: healthtrust_b
+    volumes:
+      - postgres-b-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U healthtrust -d healthtrust_b"]
+      interval: 2s
+      timeout: 2s
+      retries: 20
+
+  hospital-a-node:
+    build: .
+    restart: on-failure
+    environment:
+      NODE_ID: hospital-a-node
+      ORGANIZATION_ID: hospital-a
+      LISTEN_ADDRESS: :8081
+      PEERS: http://hospital-b-node:8082
+      DATABASE_URL: postgres://healthtrust:healthtrust@postgres-a:5432/healthtrust_a?sslmode=disable
+    ports: ["8081:8081"]
+    depends_on:
+      postgres-a:
+        condition: service_healthy
+
+  hospital-b-node:
+    build: .
+    restart: on-failure
+    environment:
+      NODE_ID: hospital-b-node
+      ORGANIZATION_ID: hospital-b
+      LISTEN_ADDRESS: :8082
+      PEERS: http://hospital-a-node:8081
+      DATABASE_URL: postgres://healthtrust:healthtrust@postgres-b:5432/healthtrust_b?sslmode=disable
+    ports: ["8082:8082"]
+    depends_on:
+      postgres-b:
+        condition: service_healthy
+
+  web:
+    build:
+      context: ./web
+      args:
+        NEXT_PUBLIC_HOSPITAL_A_API_URL: http://localhost:8081
+        NEXT_PUBLIC_HOSPITAL_B_API_URL: http://localhost:8082
+    ports: ["3000:3000"]
+    depends_on:
+      - hospital-a-node
+      - hospital-b-node
+
+volumes:
+  postgres-a-data:
+  postgres-b-data:

@@ -1,0 +1,2 @@
+DROP TABLE IF EXISTS visits;
+DROP TABLE IF EXISTS patients;

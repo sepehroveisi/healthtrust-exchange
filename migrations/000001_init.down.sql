@@ -1,0 +1,4 @@
+DROP TABLE IF EXISTS transactions;
+DROP TABLE IF EXISTS blocks;
+DROP TABLE IF EXISTS actors;
+DROP TABLE IF EXISTS organizations;
