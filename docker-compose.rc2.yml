@@ -1,0 +1,77 @@
+name: healthtrust-rc2
+
+x-besu-common: &besu-common
+  image: hyperledger/besu:25.12.0
+  restart: unless-stopped
+  command: ["--config-file=/config/config.toml"]
+  healthcheck:
+    test: ["CMD-SHELL", "bash -c '</dev/tcp/127.0.0.1/8545'"]
+    interval: 3s
+    timeout: 2s
+    retries: 30
+    start_period: 10s
+
+services:
+  besu-hospital-validator:
+    <<: *besu-common
+    ports:
+      - "127.0.0.1:8545:8545"
+    volumes:
+      - ./infra/besu/genesis.json:/config/genesis.json:ro
+      - ./infra/besu/permissions_config.toml:/config/permissions_config.toml:ro
+      - ./infra/besu/static-nodes.json:/config/static-nodes.json:ro
+      - ./infra/besu/nodes/hospital/config.toml:/config/config.toml:ro
+      - ./infra/besu/nodes/hospital/key:/keys/key:ro
+      - besu-hospital-data:/data
+    networks:
+      besu-consortium:
+        ipv4_address: 172.28.250.11
+
+  besu-payer-validator:
+    <<: *besu-common
+    ports:
+      - "127.0.0.1:8546:8545"
+    volumes:
+      - ./infra/besu/genesis.json:/config/genesis.json:ro
+      - ./infra/besu/permissions_config.toml:/config/permissions_config.toml:ro
+      - ./infra/besu/static-nodes.json:/config/static-nodes.json:ro
+      - ./infra/besu/nodes/payer/config.toml:/config/config.toml:ro
+      - ./infra/besu/nodes/payer/key:/keys/key:ro
+      - besu-payer-data:/data
+    depends_on:
+      besu-hospital-validator:
+        condition: service_healthy
+    networks:
+      besu-consortium:
+        ipv4_address: 172.28.250.12
+
+  besu-staffing-validator:
+    <<: *besu-common
+    ports:
+      - "127.0.0.1:8547:8545"
+    volumes:
+      - ./infra/besu/genesis.json:/config/genesis.json:ro
+      - ./infra/besu/permissions_config.toml:/config/permissions_config.toml:ro
+      - ./infra/besu/static-nodes.json:/config/static-nodes.json:ro
+      - ./infra/besu/nodes/staffing/config.toml:/config/config.toml:ro
+      - ./infra/besu/nodes/staffing/key:/keys/key:ro
+      - besu-staffing-data:/data
+    depends_on:
+      besu-hospital-validator:
+        condition: service_healthy
+      besu-payer-validator:
+        condition: service_healthy
+    networks:
+      besu-consortium:
+        ipv4_address: 172.28.250.13
+
+volumes:
+  besu-hospital-data:
+  besu-payer-data:
+  besu-staffing-data:
+
+networks:
+  besu-consortium:
+    ipam:
+      config:
+        - subnet: 172.28.250.0/24
