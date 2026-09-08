@@ -77,3 +77,28 @@ func (s *Store) MarkReceiptFailed(ctx context.Context, id OperationID, hash []by
 	}
 	return nil
 }
+
+func (s *Store) MarkRecoveredConfirmed(ctx context.Context, id OperationID, hash []byte, block int64, blockHash []byte) error {
+	if len(hash) != 32 || len(blockHash) != 32 || block < 0 {
+		return errors.New("invalid recovered confirmation metadata")
+	}
+	tag, err := s.pool.Exec(ctx, `UPDATE authority_ledger.ledger_submissions SET state='CONFIRMED',transaction_hash=$2,block_number=$3,block_hash=$4,last_error_class=NULL,updated_at=now() WHERE operation_id=$1 AND state IN ('LOCAL_PENDING','SUBMISSION_FAILED')`, id, hash, block, blockHash)
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() != 1 {
+		return ErrSubmissionTransition
+	}
+	return nil
+}
+
+func (s *Store) RecordReconciliationError(ctx context.Context, id OperationID, class string) error {
+	tag, err := s.pool.Exec(ctx, `UPDATE authority_ledger.ledger_submissions SET last_error_class=$2,updated_at=now() WHERE operation_id=$1 AND state<>'CONFIRMED'`, id, class)
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() != 1 {
+		return ErrSubmissionTransition
+	}
+	return nil
+}

@@ -70,6 +70,18 @@ func (f *fakeRepo) MarkConfirmed(context.Context, authorityledger.OperationID, [
 func (f *fakeRepo) MarkReceiptFailed(context.Context, authorityledger.OperationID, []byte, string) error {
 	return f.transition("receipt_failed", "SUBMISSION_FAILED")
 }
+func (f *fakeRepo) MarkRecoveredConfirmed(context.Context, authorityledger.OperationID, []byte, int64, []byte) error {
+	return f.transition("recovered", "CONFIRMED")
+}
+func (f *fakeRepo) RecordReconciliationError(context.Context, authorityledger.OperationID, string) error {
+	return f.transition("reconciliation_error", f.sub.State)
+}
+func (f *fakeRepo) Unresolved(context.Context) ([]authorityledger.Submission, error) {
+	if f.sub.State == "CONFIRMED" {
+		return nil, nil
+	}
+	return []authorityledger.Submission{f.sub}, nil
+}
 
 type fakeLedger struct {
 	repo                  *fakeRepo
@@ -78,6 +90,11 @@ type fakeLedger struct {
 	assertion, response   bool
 	assertionValue        ledger.AuthorityAssertion
 	responseValue         ledger.ResponseVersion
+	lookupStatus          ledger.ChainRecordStatus
+	lookupErr             error
+	lookupAssertion       ledger.AuthorityAssertion
+	lookupResponse        ledger.ResponseVersion
+	observeErr            error
 }
 
 func (f *fakeLedger) BroadcastAuthorityAssertion(_ context.Context, value ledger.AuthorityAssertion) (ledger.TransactionHash, error) {
@@ -93,7 +110,15 @@ func (f *fakeLedger) BroadcastResponseVersion(_ context.Context, value ledger.Re
 	return f.receipt.Hash, f.broadcastErr
 }
 func (f *fakeLedger) ObserveReceipt(context.Context, ledger.TransactionHash) (ledger.Receipt, error) {
-	return f.receipt, nil
+	return f.receipt, f.observeErr
+}
+func (f *fakeLedger) LookupAuthorityAssertion(context.Context, ledger.ID) (ledger.AuthorityAssertionLookup, error) {
+	f.repo.events = append(f.repo.events, "lookup")
+	return ledger.AuthorityAssertionLookup{Status: f.lookupStatus, Assertion: f.lookupAssertion, Receipt: f.receipt}, f.lookupErr
+}
+func (f *fakeLedger) LookupResponseVersion(context.Context, ledger.ID) (ledger.ResponseVersionLookup, error) {
+	f.repo.events = append(f.repo.events, "lookup")
+	return ledger.ResponseVersionLookup{Status: f.lookupStatus, Response: f.lookupResponse, Receipt: f.receipt}, f.lookupErr
 }
 func (f *fakeLedger) WaitReceipt(context.Context, ledger.TransactionHash) (ledger.Receipt, error) {
 	f.repo.events = append(f.repo.events, "wait")

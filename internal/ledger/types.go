@@ -142,6 +142,7 @@ var (
 	ErrSubmission           = errors.New("ledger: transaction submission failure")
 	ErrContractRevert       = errors.New("ledger: contract reverted")
 	ErrReceiptTimeout       = errors.New("ledger: receipt confirmation timeout")
+	ErrChainStateAmbiguous  = errors.New("ledger: chain state ambiguous")
 )
 
 type Interface interface {
