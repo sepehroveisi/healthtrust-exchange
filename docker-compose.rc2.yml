@@ -12,6 +12,26 @@ x-besu-common: &besu-common
     start_period: 10s
 
 services:
+  rc2-postgres:
+    profiles: ["demo-api"]
+    image: postgres:17-alpine
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:5434:5432"
+    environment:
+      POSTGRES_USER: healthtrust_rc2
+      POSTGRES_PASSWORD: healthtrust_rc2_demo
+      POSTGRES_DB: healthtrust_rc2
+    volumes:
+      - rc2-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U healthtrust_rc2 -d healthtrust_rc2"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+    networks:
+      - besu-consortium
+
   besu-hospital-validator:
     <<: *besu-common
     ports:
@@ -65,7 +85,50 @@ services:
       besu-consortium:
         ipv4_address: 172.28.250.13
 
+  rc2-demo-api:
+    profiles: ["demo-api"]
+    build:
+      context: .
+      dockerfile: Dockerfile.rc2
+    restart: on-failure
+    env_file:
+      - ./contracts/demo-accounts.env.example
+    environment:
+      HEALTHTRUST_RC2_LISTEN_ADDRESS: :8090
+      HEALTHTRUST_RC2_DATABASE_URL: postgres://healthtrust_rc2:healthtrust_rc2_demo@rc2-postgres:5432/healthtrust_rc2?sslmode=disable
+      HEALTHTRUST_RC2_MIGRATIONS: /migrations/authority_ledger
+      HEALTHTRUST_RC2_BESU_RPC_URL: http://besu-hospital-validator:8545
+      HEALTHTRUST_RC2_BESU_PEER_RPC_URL: http://besu-payer-validator:8545
+      HEALTHTRUST_RC2_CHAIN_ID: "202603"
+      HEALTHTRUST_RC2_ORGANIZATION_REGISTRY_ADDRESS: "0x1148e16d870cc191b97774d1b55f65d42ecf6cd7"
+      HEALTHTRUST_RC2_AUTHORITY_REGISTRY_ADDRESS: "0xf5495ad34a7f25b26bb8b8ef512c44c7cb5cc005"
+      HEALTHTRUST_RC2_AUTHORITY_EVENT_REGISTRY_ADDRESS: "0x3372e3af8edce113af8926a924f823edf2a301c2"
+      HEALTHTRUST_RC2_RESPONSE_LEDGER_ADDRESS: "0xaebe3a5fc1b9049970d0a53967d07c98211bcde7"
+      HEALTHTRUST_RC2_DEMO_BOOTSTRAP_ENABLED: "${HEALTHTRUST_RC2_DEMO_BOOTSTRAP_ENABLED:-true}"
+      HEALTHTRUST_RC2_DEMO_TAMPER_ENABLED: "${HEALTHTRUST_RC2_DEMO_TAMPER_ENABLED:-false}"
+      HEALTHTRUST_RC2_ALLOWED_ORIGIN: "${HEALTHTRUST_RC2_ALLOWED_ORIGIN:-http://localhost:3000}"
+    ports:
+      - "127.0.0.1:8090:8090"
+    depends_on:
+      rc2-postgres:
+        condition: service_healthy
+      besu-hospital-validator:
+        condition: service_healthy
+      besu-payer-validator:
+        condition: service_healthy
+      besu-staffing-validator:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://127.0.0.1:8090/readyz"]
+      interval: 3s
+      timeout: 2s
+      retries: 40
+      start_period: 45s
+    networks:
+      - besu-consortium
+
 volumes:
+  rc2-postgres-data:
   besu-hospital-data:
   besu-payer-data:
   besu-staffing-data:
