@@ -8,6 +8,7 @@ import (
 	"strconv"
 
 	"github.com/healthtrust-exchange/healthtrust-exchange/internal/application/authorityworkflow"
+	"github.com/healthtrust-exchange/healthtrust-exchange/internal/application/integrityverification"
 	"github.com/healthtrust-exchange/healthtrust-exchange/internal/ledger"
 	"github.com/healthtrust-exchange/healthtrust-exchange/internal/submission"
 )
@@ -27,7 +28,13 @@ type Service interface {
 	ReconcileUnresolved(context.Context, int) []submission.Result
 }
 
-func Handler(service Service) http.Handler {
+type VerificationService interface {
+	VerifyAuthorityEvent(context.Context, string) (integrityverification.Result, error)
+	VerifyResponse(context.Context, string, string) (integrityverification.Result, error)
+	VerifyEventBundle(context.Context, string) (integrityverification.BundleResult, error)
+}
+
+func Handler(service Service, verification ...VerificationService) http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("POST /api/rc2/authority-events", func(w http.ResponseWriter, r *http.Request) {
 		var in authorityworkflow.AuthorityEventInput
@@ -91,7 +98,37 @@ func Handler(service Service) http.Handler {
 		}
 		write(w, http.StatusOK, service.ReconcileUnresolved(r.Context(), limit))
 	})
+	if len(verification) > 0 && verification[0] != nil {
+		verifier := verification[0]
+		mux.HandleFunc("GET /api/rc2/authority-events/{event}/verification", func(w http.ResponseWriter, r *http.Request) {
+			value, err := verifier.VerifyAuthorityEvent(r.Context(), r.PathValue("event"))
+			verificationResponse(w, value, err)
+		})
+		mux.HandleFunc("GET /api/rc2/authority-events/{event}/responses/{org}/verification", func(w http.ResponseWriter, r *http.Request) {
+			value, err := verifier.VerifyResponse(r.Context(), r.PathValue("event"), r.PathValue("org"))
+			verificationResponse(w, value, err)
+		})
+		mux.HandleFunc("GET /api/rc2/authority-events/{event}/verification/bundle", func(w http.ResponseWriter, r *http.Request) {
+			value, err := verifier.VerifyEventBundle(r.Context(), r.PathValue("event"))
+			verificationResponse(w, value, err)
+		})
+	}
 	return mux
+}
+
+func verificationResponse(w http.ResponseWriter, value any, err error) {
+	switch {
+	case err == nil:
+		write(w, http.StatusOK, value)
+	case errors.Is(err, integrityverification.ErrInvalid):
+		write(w, http.StatusBadRequest, map[string]string{"error": "invalid request"})
+	case errors.Is(err, integrityverification.ErrNotFound):
+		write(w, http.StatusNotFound, map[string]string{"error": "not found"})
+	case errors.Is(err, integrityverification.ErrUnavailable):
+		write(w, http.StatusServiceUnavailable, value)
+	default:
+		write(w, http.StatusInternalServerError, map[string]string{"error": "operation failed"})
+	}
 }
 func decode(w http.ResponseWriter, r *http.Request, target any) bool {
 	r.Body = http.MaxBytesReader(w, r.Body, maxBody)
