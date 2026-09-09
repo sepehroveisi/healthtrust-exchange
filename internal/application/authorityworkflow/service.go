@@ -84,6 +84,7 @@ type ResponseVersionView struct {
 	Commitment                                     authorityledger.Commitment
 	Ledger                                         LedgerStatus
 	CreatedAt                                      time.Time
+	ActionPresentation                             *ActionPresentation `json:"actionPresentation,omitempty"`
 }
 type AuthorityEventInput struct {
 	EventID, SeriesID, AuthorityID, SubjectID, OperationID string
@@ -220,7 +221,13 @@ func (s *Service) responseView(ctx context.Context, v authorityledger.ResponseVe
 	if e != nil {
 		return ResponseVersionView{}, e
 	}
-	return ResponseVersionView{string(v.ID), string(v.ResponseID), string(v.EventID), string(v.OrganizationID), v.State, v.PreviousID, v.PolicyVersionID, v.DecisionID, v.ActionID, v.Commitment, status(sub), v.CreatedAt}, nil
+	return ResponseVersionView{
+		ID: string(v.ID), ResponseID: string(v.ResponseID), EventID: string(v.EventID),
+		OrganizationID: string(v.OrganizationID), State: v.State, PreviousID: v.PreviousID,
+		PolicyVersionID: v.PolicyVersionID, DecisionID: v.DecisionID, ActionID: v.ActionID,
+		Commitment: v.Commitment, Ledger: status(sub), CreatedAt: v.CreatedAt,
+		ActionPresentation: actionPresentation(v),
+	}, nil
 }
 func (s *Service) StartOrganizationResponse(ctx context.Context, in StartResponseInput) (ResponseVersionView, error) {
 	if in.ActorOrganizationID != in.OrganizationID {
