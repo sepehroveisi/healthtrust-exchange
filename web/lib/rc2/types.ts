@@ -1,0 +1,13 @@
+export type VerificationStatus="VERIFIED"|"FAILED"|"INDETERMINATE";
+export type BinaryValue=number[]|string;
+export interface LedgerStatus{state:string;operationId:string;transactionHash?:BinaryValue;blockNumber?:number;blockHash?:BinaryValue;lastErrorClass?:string}
+export interface ActionPresentation{code:string;label:string;demoOnly:boolean}
+export interface AuthorityEvent{ID:string;SeriesID:string;AuthorityID:string;SubjectID:string;EventType:string;AssertionKind:string;Effect:string;EffectiveTime:string;CurrentHead:string;Commitment:number[];Ledger:LedgerStatus;CreatedAt:string}
+export interface ResponseVersion{ID:string;ResponseID:string;EventID:string;OrganizationID:string;State:string;PreviousID?:string;PolicyVersionID?:string;DecisionID?:string;ActionID?:string;Commitment:number[];Ledger:LedgerStatus;CreatedAt:string;actionPresentation?:ActionPresentation}
+export interface VerificationCheck{type:string;status:VerificationStatus;objectId:string;expected?:string;observed?:string;classification?:string}
+export interface VerificationResult{status:VerificationStatus;objectType:string;objectId:string;checks:VerificationCheck[]}
+export interface OrganizationVerification{organizationId:string;result:VerificationResult}
+export interface VerificationBundle{status:VerificationStatus;eventId:string;authority:VerificationResult;responses:OrganizationVerification[]}
+export interface TamperSnapshot{status:VerificationStatus;localCommitment:string;ledgerCommitment:string;verification:VerificationResult}
+export interface TamperResult{demoOnly:boolean;warning:string;target:"HOSPITAL_A_POLICY";eventId:string;organizationId:string;mutationType:string;changedField:string;before:TamperSnapshot;after:TamperSnapshot;ledgerUnchanged:boolean}
+export interface RC2WorkspaceData{event:AuthorityEvent;responses:ResponseVersion[];histories:Record<string,ResponseVersion[]>;bundle:VerificationBundle;verifications:Record<string,VerificationResult>}
