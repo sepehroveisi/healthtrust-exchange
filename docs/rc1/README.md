@@ -141,11 +141,11 @@ Application-layer signatures do not replace production TLS/mTLS. See [Security](
 
 ## Product experience
 
-<p align="center"><img src="docs/images/landing.png" alt="Landing page" width="92%"></p>
+<p align="center"><img src="../images/landing.png" alt="Landing page" width="92%"></p>
 
-<table><tr><td width="50%"><img src="docs/images/consent.png" alt="Patient consent center"></td><td width="50%"><img src="docs/images/integrity.png" alt="Clinical record integrity"></td></tr><tr><td align="center">Patient-controlled access</td><td align="center">Record integrity</td></tr></table>
+<table><tr><td width="50%"><img src="../images/consent.png" alt="Patient consent center"></td><td width="50%"><img src="../images/integrity.png" alt="Clinical record integrity"></td></tr><tr><td align="center">Patient-controlled access</td><td align="center">Record integrity</td></tr></table>
 
-<table><tr><td width="50%"><img src="docs/images/audit.png" alt="Blockchain audit timeline"></td><td width="50%"><img src="docs/images/system-status.png" alt="Hospital system status"></td></tr><tr><td align="center">Real blockchain events</td><td align="center">Synchronized nodes</td></tr></table>
+<table><tr><td width="50%"><img src="../images/audit.png" alt="Blockchain audit timeline"></td><td width="50%"><img src="../images/system-status.png" alt="Hospital system status"></td></tr><tr><td align="center">Real blockchain events</td><td align="center">Synchronized nodes</td></tr></table>
 
 See the [workflow story](../images/workflow.png) and [five-minute demo script](../DEMO.md).
 
