@@ -244,17 +244,36 @@ scripts/                      runtime validation helpers
 web/                          Vinext/React UI, frontend tests, and Playwright E2E
 ```
 
-## RC1 history
+## Project evolution — RC1 to RC2
 
-RC1 is the broader two-hospital healthcare data-exchange prototype: clinical
-records, referrals, patient consent, cross-hospital retrieval, and a custom
-permissioned chain. RC2 intentionally narrows the research surface to
-professional-authority evidence and independent organizational responses, using
-PostgreSQL plus Hyperledger Besu/QBFT.
+HealthTrust developed through two deliberately different engineering prototypes.
 
-RC1 remains preserved by the `rc1` Git tag. Its historical
-[architecture](docs/ARCHITECTURE.md), [security model](docs/SECURITY.md), and
-[demo script](docs/DEMO.md) describe RC1, not the RC2 runtime.
+**RC1 — Cross-Hospital Exchange Prototype**
+
+RC1 explored a broader healthcare data-exchange problem: clinical records,
+referrals, patient consent, cross-hospital retrieval, and a custom permissioned
+blockchain across two hospital nodes.
+
+- [Read the complete RC1 overview](docs/rc1/README.md)
+- [Architecture](docs/ARCHITECTURE.md)
+- [Security model](docs/SECURITY.md)
+- [Demo script](docs/DEMO.md)
+- Historical release point: `rc1`
+
+**RC2 — Professional Authority Response Ledger**
+
+Research following RC1 changed the direction of the project. Rather than making
+the original system broader, RC2 narrows the question to professional-authority
+events, shared verifiable evidence, and independent organizational responses.
+
+RC2 replaces the custom-chain focus with PostgreSQL plus a three-validator
+Hyperledger Besu/QBFT consortium and adds durable submission, reconciliation,
+integrity verification, a controlled inconsistency demonstration, and a
+portfolio-oriented operations interface.
+
+The two versions are intentionally preserved together: RC1 shows where the
+project started; RC2 shows how the engineering question changed after research
+and implementation.
 
 ## Security, privacy, and non-claims
 
